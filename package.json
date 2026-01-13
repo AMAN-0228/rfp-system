@@ -1,0 +1,22 @@
+{
+  "name": "rfp-system",
+  "version": "1.0.0",
+  "description": "Request For Proposal System - Monorepo",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm --filter './packages/*' clean && rm -rf node_modules"
+  },
+
+  "keywords": [
+    "rfp",
+    "request-for-proposal",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.27.0"
+}
