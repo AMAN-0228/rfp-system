@@ -9,6 +9,7 @@ import noAuthUserRoutes from './routes/no-authUser'
 import { authenticate } from './middleware/auth';
 import { refreshToken } from './controllers/userAuth';
 import { asyncHandler } from './middleware/asyncHandler';
+import supplierRoutes from './routes/supplierRoutes';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.post('/api/auth/refresh', asyncHandler(refreshToken));
 app.use(authenticate);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/supplier', supplierRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

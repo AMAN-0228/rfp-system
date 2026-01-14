@@ -16,4 +16,22 @@ model Users {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  supplier Suppliers[]
+}
+
+// Supplier model
+model Suppliers {
+  id           Int      @id @default(autoincrement())
+  code         String
+  email        String   @unique
+  name         String
+  status       String
+  active       Boolean
+  isRegistered Boolean  @default(false)
+  creatorId    Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+
+  creator Users @relation(fields: [creatorId], references: [id])
 }
