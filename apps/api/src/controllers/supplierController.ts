@@ -4,6 +4,24 @@ import * as supplierService from '../service/supplierService';
 
 export const getAllSuppliersForListing = async(req: Request, res: Response) => {
     // TODO: Implement this function
+    const options = {
+        page: req.query.page ? Number(req.query.page) : 1,
+        limit: req.query.limit ? Number(req.query.limit) : 10,
+        search: req.query.search ? String(req.query.search) : '',
+        sort: req.query.sort ? String(req.query.sort) : 'createdAt',
+        order: req.query.order ? String(req.query.order) : 'desc',
+        creatorId: req.query.creatorId ? Number(req.query.creatorId) : undefined,
+        active: req.query.active ? Boolean(req.query.active) : undefined,
+        isRegistered: req.query.isRegistered ? Boolean(req.query.isRegistered) : undefined,
+        status: req.query.status ? String(req.query.status) : undefined,
+    }
+    const suppliers = await supplierService.getAllSuppliersForListing(options, req.auth!);
+    res.status(200)
+        .json({
+            success: true,
+            message: 'Suppliers fetched successfully',
+            data: suppliers,
+        });
 
 }
 

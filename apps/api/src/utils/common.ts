@@ -1,7 +1,7 @@
-import { ValidationError } from "./errors";
+import { DbError, ValidationError } from "./errors";
 import { TokenPayload } from "./tokens";
 import prisma from "../config/database";
-import { REGEX_MAPPING } from "./constant";
+import { modelMapping, REGEX_MAPPING } from "./constant";
 
 export const markActiveAndInactive = async (values: {id: number, active: boolean, userType: 'user' | 'supplier'}, auth: TokenPayload) => {
     const { id, active, userType } = values;
@@ -32,3 +32,13 @@ export const regxcheck = (value: string, field: string ) => {
     }
     return result;
 };
+
+export const checkModelInMapping = (model: string) => {
+    if (!model) {
+        throw new DbError('model is requried for the process');
+    }
+
+   if (!Object.keys(modelMapping).includes(model)) {
+    throw new DbError('model used is incorrect, not in mapping');
+   }
+}
