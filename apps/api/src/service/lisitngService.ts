@@ -1,3 +1,4 @@
+import { skip } from "@prisma/client/runtime/client";
 import prisma from "../config/database";
 import { checkModelInMapping } from "../utils/common";
 import { modelMapping } from "../utils/constant";
@@ -32,6 +33,7 @@ export const supplierListingData = async (options: any, auth: TokenPayload) => {
         orderBy: {
             [options.sort || sort]: options.order,
         },
+        where: {},
         select: {
             id: true,
             name: true,
@@ -75,4 +77,72 @@ export const supplierListingData = async (options: any, auth: TokenPayload) => {
         ]);
     
     return {suppliers, count};
+};
+
+export const rfpForListing = async (options: any, auth: TokenPayload) => {
+
+    const filter= {
+        orderBy: {
+            [options.sort || 'createdAt']: options.order || 'desc'
+        },          
+        where :{
+            userId: auth.userId,
+        },
+        select: {
+            id: true,
+            code: true,
+            status: true,
+            subject: true,
+            createdAt: true,
+            userId: true,
+            user: {
+                select:{
+                    id: true,
+                    name: true,
+                }
+            }
+        },
+        include: {
+            suppliers: {
+                select: {
+                    supplierId: true,
+                    supplier: {
+                        select: {
+                            id: true,
+                            email: true,
+                            name: true,
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (options.search) {
+        filter.where['searchString'] = {
+            contains: options.search,
+            mode: 'insensitive',
+        }
+    }
+
+    if (options.status) {
+        filter.where['status'] = options.status;
+    }
+    if (options.active) {
+        filter.where['active'] = options.active
+    }
+
+    if (options.supplierId) {
+        filter.where['suppliers']  = {
+            some: {
+                supplierId: options.supplierId
+            }
+        }
+    }
+
+    const [rfps = [], count ] = await Promise.all([
+        allForListing(filter, {take: options.take,skip: options.skip }, 'RFP', auth),
+        countForListing(filter, 'RFP', auth)
+    ]);
+    return { rfps, count };
 };

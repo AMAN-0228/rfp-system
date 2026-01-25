@@ -41,4 +41,14 @@ export const checkModelInMapping = (model: string) => {
    if (!Object.keys(modelMapping).includes(model)) {
     throw new DbError('model used is incorrect, not in mapping');
    }
+};
+
+export const createCommonMetaDataForListing = (values: any) => {
+    const { count = 0, limit = 10 , page = 1 } = values;
+    return {
+        pages: Math.ceil(count/limit),
+        limit,
+        totalCount: count,
+        page,
+    }
 }

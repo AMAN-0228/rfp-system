@@ -5,6 +5,7 @@ export const REGEX_MAPPING = {
 };
 
 export const modelMapping = {
-    USERS: 'users',
-    SUPPLIERS: 'suppliers'
+    USER: 'user',
+    SUPPLIER: 'supplier',
+    RFP: 'rfp',
 };
