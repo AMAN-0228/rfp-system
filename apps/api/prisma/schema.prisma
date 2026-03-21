@@ -18,6 +18,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   suppliers Supplier[]
+  rfps RFP[]
 }
 
 // Supplier model
@@ -36,6 +37,7 @@ model Supplier {
 
   creator User @relation(fields: [creatorId], references: [id])
   rfps RFPSupplier[]
+  lineItemQuotes SupplierLineItemQuote[]
 }
 
 // rfp model
@@ -50,7 +52,7 @@ model RFP {
 
   userId Int
   templateId Int
-
+  appId Int
   template Json @default(dbgenerated("'{}'"))
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -58,6 +60,7 @@ model RFP {
   user User @relation(fields: [userId], references: [id])
   lineItems LineItem[]
   suppliers RFPSupplier[]
+  app App @relation(fields: [appId], references:[id])
 }
 
 //rfp line items 
@@ -77,6 +80,7 @@ model LineItem {
   updatedAt DateTime @updatedAt
 
   rfp RFP @relation(fields: [rfpId], references:[id])
+  quotes SupplierLineItemQuote[]
 }
 
 model Template {
@@ -87,10 +91,12 @@ model Template {
   active Boolean @default(true)
   label String
   config Json
+  appId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   sections Section[]
+  app App @relation(fields: [appId], references:[id])
 }
 
 model Section {
@@ -113,6 +119,7 @@ model Field {
   active Boolean @default(true)
   systemKey String
   mandatory Boolean @default(false)
+  key String
   type String
   sectiontype String
   createdAt DateTime @default(now())
@@ -151,4 +158,13 @@ model SupplierLineItemQuote {
   lineItem LineItem @relation(fields: [lineItemId], references: [id])
 
   @@unique([supplierId, lineItemId])
+}
+
+model App {
+  id Int @id @default(autoincrement())
+  label String
+  config Json @default(dbgenerated("'{}'"))
+
+  rfps RFP[]
+  templates Template[]
 }
