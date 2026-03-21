@@ -1,5 +1,5 @@
 import prisma from "../config/database";
-import { regxcheck } from "../utils/common";
+import { createCommonMetaDataForListing, regxcheck } from "../utils/common";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../utils/errors";
 import { TokenPayload } from "../utils/tokens";
 import * as listingService from './lisitngService'
@@ -187,22 +187,18 @@ export const getAllSuppliersForListing = async (options: any,auth: TokenPayload)
     const take = limit;
     
     const { suppliers, count} = await listingService.supplierListingData({
+        ...options,
         skip,
         take,
         search,
-        order
+        order,
     }, auth);
 
-
+    const countData = createCommonMetaDataForListing({count, limit, page})
    
     return {
         suppliers,
-        countData:{
-            pages: Math.ceil(count/limit),
-            limit,
-            totalCount: count,
-            page,
-        }
+        countData,
     }
    
 }
