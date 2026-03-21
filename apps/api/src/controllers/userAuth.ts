@@ -3,6 +3,7 @@ import { register, verifyingOtpForRegistration } from '../utils/registration';
 import { login } from '../utils/auth';
 import { ValidationError } from '../utils/errors';
 import { refreshTokens } from '../utils/tokens';
+import { forgotPassword, forgotPasswordVerify, resetPassword } from '../utils/password';
 
 export const registerUser = async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
@@ -65,4 +66,28 @@ export const logoutUser = async (req: Request, res: Response) => {
         .clearCookie('accessToken')
         .clearCookie('refreshToken')
         .json({ success: true, message: 'User logged out successfully' });
+};
+
+export const resetPasswordForUser = async (req: Request, res: Response) => {
+    const { email, password , isForgotPassword = false, oldPassword}  = req.body;
+    await resetPassword({ email, password, oldPassword, isForgotPassword }, req.auth);
+    res.status(200).json({ success: true, message: 'Password reset successfully' });
+};
+
+export const forgotPasswordForUser = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    await forgotPassword(email)
+    res.status(200).json({ success: true, message: 'OTP sent to email for password reset' });
+};
+
+export const forgotPasswordVerifyOtpForUser = async (req: Request, res: Response) => {
+    const { email, otp } = req.body;
+    await forgotPasswordVerify(email, otp);
+    res.status(200).json({ success: true, message: 'OTP verified successfully' });
+};
+
+export const userProfile = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    // ToDo: Implement the logic to get the user profile
+    res.status(200).json({ success: true, message: 'User profile fetched successfully' });
 };
