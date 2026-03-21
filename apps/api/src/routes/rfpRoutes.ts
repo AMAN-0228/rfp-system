@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
-import  { getAllRfpForListing } from '../controllers/rfpController'
+import { createNew, getAllRfpForListing } from '../controllers/rfpController';
 
 const router = Router();
 
 router.get('/', asyncHandler(getAllRfpForListing));
-// router.post('/', asyncHandler(createNew));
+router.post('/', asyncHandler(createNew));
 // router.post('/:id/edit', asyncHandler(edit));
 
 export default router;

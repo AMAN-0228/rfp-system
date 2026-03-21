@@ -1,4 +1,4 @@
-import prisma from "../config/database";
+import * as supplierRepository from "../repositories/supplierRepository";
 import { createCommonMetaDataForListing, regxcheck } from "../utils/common";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../utils/errors";
 import { TokenPayload } from "../utils/tokens";
@@ -19,28 +19,10 @@ const accessCheckForAction = (action: Action, creatorId: number, auth: TokenPayl
 }
 
 const createSearchString = async (supplierId: number) => {
-    const supplier = await prisma.suppliers.findUnique({
-        where: {
-            id: supplierId,
-        },
-        select: {
-            name: true,
-            email: true,
-            code: true,
-        },
-    });
-    if (!supplier) {
+    const updated = await supplierRepository.updateSearchString(supplierId);
+    if (!updated) {
         throw new NotFoundError('Supplier not found');
     }
-    const searchString = `${supplier.code} ${supplier.name} ${supplier.email}`;
-    await prisma.suppliers.update({
-        where: {
-            id: supplierId,
-        },
-        data: {
-            searchString,
-        },
-    });
 }
 
 const createObj = (data: any, userId: number) => {
@@ -86,7 +68,7 @@ export const create = async (payload: any, auth: TokenPayload) => {
     validateSupplierDataForCreateAndEdit(payload, 'create');
     const obj = createObj(payload, auth.userId);
     
-    const existingSupplier = await prisma.suppliers.findFirst({
+    const existingSupplier = await supplierRepository.findFirst({
         where: { email: obj.email },
         select: {
             id: true,
@@ -96,7 +78,7 @@ export const create = async (payload: any, auth: TokenPayload) => {
         throw new ConflictError('Supplier with this email already exists');
     }
 
-    const supplier = await prisma.suppliers.create({
+    const supplier = await supplierRepository.create({
         data: obj,
     });
     createSearchString(supplier.id); // without waiting for the create to complete
@@ -107,7 +89,7 @@ export const edit = async (payload: any, auth: TokenPayload) => {
     validateSupplierDataForCreateAndEdit(payload, 'edit');
     const obj = createObj(payload, auth.userId);
 
-    const supplier = await prisma.suppliers.findUnique({
+    const supplier = await supplierRepository.findUnique({
         where: { 
             id: obj.id,
             email: obj.email,
@@ -121,7 +103,7 @@ export const edit = async (payload: any, auth: TokenPayload) => {
         throw new NotFoundError('Supplier with this email and id not found');
     }
     accessCheckForAction('edit', supplier.creatorId, auth);
-    const updatedSupplier = await prisma.suppliers.update({
+    const updatedSupplier = await supplierRepository.update({
         where: { id: obj.id },
         data: obj,
     });
@@ -134,7 +116,7 @@ export const deleteSupplier = async (id: number, auth: TokenPayload) => {
         throw new ValidationError('Id is required');
     }
     
-    const supplier = await prisma.suppliers.findUnique({
+    const supplier = await supplierRepository.findUnique({
         where: { 
             id,
             status:{
@@ -150,7 +132,7 @@ export const deleteSupplier = async (id: number, auth: TokenPayload) => {
         throw new NotFoundError('Supplier not found');
     }
     accessCheckForAction('delete', supplier.creatorId, auth);
-    return await prisma.suppliers.update({
+    return await supplierRepository.update({
         where: { id },
         data: {
             active: false,
@@ -164,7 +146,7 @@ export const getSupplierForView = async (id: number, auth: TokenPayload) => {
         throw new ValidationError('Id is required');
     }
     
-    const supplier = await prisma.suppliers.findUnique({
+    const supplier = await supplierRepository.findUnique({
         where: { id },
         include: {
             creator: {
