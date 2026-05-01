@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload } from '../utils/tokens';
 import { ApiError } from '../utils/errors';
 
+declare global {
+  namespace Express {
+    interface Request {
+      auth?: TokenPayload;
+    }
+  }
+}
 
 export const authenticate = async (
   req: Request,

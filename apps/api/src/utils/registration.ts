@@ -1,5 +1,5 @@
 import { ValidationError } from "./errors";
-import * as userRepository from "../repositories/userRepository";
+import prisma from "../config/database";
 import { sendOtp, verifyOtp } from "./opt";
 import { env } from "../config/env";
 import { hashPassword } from "./password";
@@ -9,7 +9,7 @@ export const register =  async (values: { name:string, email: string; password: 
     if (!name || !email || !password) {
         throw new ValidationError('Name, email and password are required');
     }
-    const existingUser = await userRepository.findFirst({
+    const existingUser = await prisma.users.findFirst({
         where: { email },
     });
     if (existingUser) {
@@ -32,7 +32,7 @@ export const verifyingOtpForRegistration = async (values: { name:string, email: 
     const hashedPassword = await hashPassword(password);
 
     if (userType === 'user') {
-        await userRepository.create({
+        await prisma.users.create({
             data: {
                 email,
                 password: hashedPassword,

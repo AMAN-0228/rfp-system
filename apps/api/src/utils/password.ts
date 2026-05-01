@@ -1,7 +1,7 @@
 
 import bcrypt from 'bcrypt';
 import { env } from '../config/env';
-import * as userRepository from '../repositories/userRepository';
+import prisma from '../config/database';
 import { TokenPayload } from './tokens';
 import { sendOtp, verifyOtp } from './opt';
 import { ValidationError } from './errors';
@@ -38,7 +38,7 @@ const changePassword = async (userId: number, password: string) => {
     throw new ValidationError('User ID and password are required for changing password');
   }
   const hashedPassword = await hashPassword(password);
-  await userRepository.update({
+  await prisma.users.update({
     where: { id: userId },
     data: { password: hashedPassword },
   });
@@ -51,7 +51,7 @@ export const resetPassword = async ({ email, password, oldPassword, isForgotPass
   if (!isForgotPassword && !oldPassword) {
     throw new ValidationError('Old password is required for resetting password');
   }
-  const user = await userRepository.findUnique({
+  const user = await prisma.users.findUnique({
     where: {
       email,
     },
@@ -73,7 +73,7 @@ export const forgotPassword = async (email: string) => {
   if (!email) {
     throw new ValidationError('Email is required for forgot password');
   }
-  const user = await userRepository.findUnique({
+  const user = await prisma.users.findUnique({
     where: {
       email,
     },

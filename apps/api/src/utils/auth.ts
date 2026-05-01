@@ -1,5 +1,5 @@
 import { ValidationError } from "./errors";
-import * as userRepository from "../repositories/userRepository";
+import prisma from "../config/database";
 import { verifyPassword } from "./password";
 import { generateTokenPair, TokenPair } from "./tokens";
 
@@ -18,7 +18,7 @@ export const login = async (
     throw new ValidationError('Email and password are required');
   }
 
-  const user = await userRepository.findUnique({
+  const user = await prisma.users.findUnique({
     where: { email },
     select: {
       id: true,
