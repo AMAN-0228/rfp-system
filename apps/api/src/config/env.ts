@@ -42,20 +42,6 @@ export const env = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || undefined,
   REDIS_DB: parseInt(process.env.REDIS_DB || '0', 10),
 
-  // Email — outbound
-  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
-  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || '',
-  RESEND_FROM_NAME: process.env.RESEND_FROM_NAME || 'RFP System',
-
-  // Email — inbound
-  MAILGUN_API_KEY: process.env.MAILGUN_API_KEY || '',
-  MAILGUN_INBOUND_DOMAIN: process.env.MAILGUN_INBOUND_DOMAIN || '',
-  MAILGUN_WEBHOOK_SIGNING_KEY: process.env.MAILGUN_WEBHOOK_SIGNING_KEY || '',
-
-  // Reply addressing
-  REPLY_ADDRESS_DOMAIN: process.env.REPLY_ADDRESS_DOMAIN || '',
-  REPLY_ADDRESS_LOCAL_PART: process.env.REPLY_ADDRESS_LOCAL_PART || 'rfp',
-
   // Queue
   EMAIL_OUTBOUND_QUEUE: process.env.EMAIL_OUTBOUND_QUEUE || 'email-outbound',
   EMAIL_INBOUND_QUEUE: process.env.EMAIL_INBOUND_QUEUE || 'email-inbound',

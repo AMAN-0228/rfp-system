@@ -73,29 +73,3 @@ export const closeRedisConnection = async (): Promise<void> => {
 
 // Export singleton instance
 export const redisClient = getRedisClient();
-
-// Separate BullMQ-compatible connection (requires maxRetriesPerRequest: null)
-let bullmqRedis: Redis | null = null;
-export const bullmqRedisClient = (() => {
-  if (bullmqRedis) return bullmqRedis;
-
-  const bullmqOptions = {
-    maxRetriesPerRequest: null as null,
-    enableReadyCheck: false,
-  };
-
-  bullmqRedis = env.REDIS_URL
-    ? new Redis(env.REDIS_URL, {
-        ...bullmqOptions,
-        ...(env.REDIS_URL.startsWith("rediss://") && { tls: {} }),
-      })
-    : new Redis({
-        host: env.REDIS_HOST,
-        port: env.REDIS_PORT,
-        password: env.REDIS_PASSWORD || undefined,
-        db: env.REDIS_DB,
-        ...bullmqOptions,
-      });
-
-  return bullmqRedis;
-})();
