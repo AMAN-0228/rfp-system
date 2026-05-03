@@ -315,9 +315,11 @@ The `App` model wraps `RFP` and `Template` records for organizational scoping. *
 - **Response shape:** Always return `{ success: true, data: <payload> }` for success; pagination adds `countData: { pages, limit, totalCount, page }`
 - **Auth:** Access `req.auth.userId` and `req.auth.email` in controllers — never read raw token headers
 - **Ownership checks:** Always check `auth.userId === record.creatorId` before allowing edit/delete
+- **Env vars:** Never access `process.env.*` directly in application code. All environment variables are centralised in each app's `src/config/env.ts`. Always import `env` from that file and access vars as `env.SOME_VAR`. This applies to every app/package in the monorepo.
 
 ### What to Avoid
 
+- Do not access `process.env.*` directly — always use `env` imported from `src/config/env.ts`
 - Do not use `ACTIONS.DELETE` — the constant key is `ACTIONS.DElETE` (typo preserved intentionally until fixed)
 - Do not import from `@prisma/client` — import from `'../generated/prisma/client'`
 - Do not instantiate a new `PrismaClient` anywhere — use the singleton from `config/database.ts`

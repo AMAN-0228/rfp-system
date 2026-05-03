@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import type { ProcessInboundJob } from "@apps/email-contracts";
 import { logger } from "../config/logger";
-import { redisConnectionOptions } from "../config/redis";
+import { redisConnection } from "../config/redis";
 import { env } from "../config/env";
 
 export function createInboundWorker(): Worker<ProcessInboundJob> {
@@ -10,6 +10,6 @@ export function createInboundWorker(): Worker<ProcessInboundJob> {
     async (job) => {
       logger.info({ jobId: job.id, type: job.data.type }, "inbound job (skeleton)");
     },
-    { connection: redisConnectionOptions, concurrency: 3 }
+    { connection: redisConnection, concurrency: 3 }
   );
 }
