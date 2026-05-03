@@ -38,6 +38,8 @@ model Supplier {
   creator User @relation(fields: [creatorId], references: [id])
   rfps RFPSupplier[]
   lineItemQuotes SupplierLineItemQuote[]
+  emailMessages EmailMessage[]
+  inboundEmails InboundEmail[]
 }
 
 // rfp model
@@ -61,6 +63,8 @@ model RFP {
   lineItems LineItem[]
   suppliers RFPSupplier[]
   app App @relation(fields: [appId], references:[id])
+  emailMessages EmailMessage[]
+  inboundEmails InboundEmail[]
 }
 
 //rfp line items 
@@ -135,6 +139,7 @@ model RFPSupplier {
   status      String @default("invited")
   invitedAt   DateTime @default(now())
   respondedAt DateTime?
+  replyToken  String?  @unique
 
   rfp       RFP      @relation(fields: [rfpId], references: [id])
   supplier  Supplier @relation(fields: [supplierId], references: [id])
@@ -167,4 +172,60 @@ model App {
 
   rfps RFP[]
   templates Template[]
+}
+
+model EmailMessage {
+  id                Int       @id @default(autoincrement())
+  rfpId             Int?
+  supplierId        Int?
+  userId            Int?
+  idempotencyKey    String    @unique
+  providerMessageId String?   @unique
+  threadId          String?
+  type              String
+  toEmail           String
+  fromEmail         String
+  subject           String
+  status            String    @default("queued")
+  errorMessage      String?
+  attemptCount      Int       @default(0)
+  queuedAt          DateTime  @default(now())
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+
+  rfp      RFP?      @relation(fields: [rfpId], references: [id])
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@index([rfpId])
+  @@index([supplierId])
+  @@index([status])
+}
+
+model InboundEmail {
+  id                Int       @id @default(autoincrement())
+  rfpId             Int?
+  supplierId        Int?
+  matchedBy         String?
+  providerMessageId String    @unique
+  inReplyTo         String?
+  references        String?
+  fromEmail         String
+  toEmail           String
+  subject           String
+  bodyText          String?
+  bodyHtml          String?
+  rawPayload        Json
+  status            String    @default("received")
+  errorMessage      String?
+  extractionStatus  String?
+  receivedAt        DateTime  @default(now())
+  processedAt       DateTime?
+
+  rfp      RFP?      @relation(fields: [rfpId], references: [id])
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@index([rfpId])
+  @@index([supplierId])
+  @@index([status])
 }

@@ -1,7 +1,6 @@
 import { redisClient } from "../config/redis";
 import { ValidationError } from "./errors"
 import { redisService } from "../service/redisService";
-import { emailService } from "../service/email/emailService";
 
 export const sendOtp = async (email: string) => {
     if (!email) {
@@ -24,18 +23,8 @@ export const sendOtp = async (email: string) => {
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000);
-    
-    const emailResult = await emailService.sendOtp({ 
-      email, 
-      otp: otp.toString() 
-    });
-    
-    if (!emailResult.success) {
-      throw new ValidationError(
-        emailResult.error?.message || 'Failed to send OTP email. Please try again.'
-      );
-    }
-    
+    // TODO: Enqueue the OTP to the outbound queue
+
     await redisService.set(otpKey, otp.toString(), 60);
     await redisService.set(`otp:${email}_attempts`, (numberOfAttempts + 1).toString(), 5 * 60);
     return otp;
