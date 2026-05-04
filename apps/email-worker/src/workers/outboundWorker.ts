@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import type { OutboundJob } from "@apps/email-contracts";
 import { logger } from "../config/logger";
-import { redisConnection } from "../config/redis";
+import { createRedisConnection } from "../config/redis";
 import { env } from "../config/env";
 
 export function createOutboundWorker(): Worker<OutboundJob> {
@@ -10,6 +10,6 @@ export function createOutboundWorker(): Worker<OutboundJob> {
     async (job) => {
       logger.info({ jobId: job.id, type: job.data.type }, "outbound job (skeleton)");
     },
-    { connection: redisConnection, concurrency: 5 }
+    { connection: createRedisConnection(), concurrency: 5 }
   );
 }
