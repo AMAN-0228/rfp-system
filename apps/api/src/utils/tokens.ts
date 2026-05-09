@@ -15,12 +15,12 @@ export interface TokenPair {
 export const generateAccessToken = (payload: TokenPayload): string => {
   
   const token = jwt.sign(
-    payload, // Data to encode in token
-    env.JWT_ACCESS_TOKEN_SECRET, // Secret key for signing
+    payload,
+    env.JWT_ACCESS_TOKEN_SECRET,
     {
-      expiresIn: env.JWT_ACCESS_TOKEN_EXPIRATION, // How long token is valid
-      issuer: 'rfp-system', // Who issued the token
-      audience: 'rfp-system-api', // Who can use the token
+      expiresIn: env.JWT_ACCESS_TOKEN_EXPIRATION as never,
+      issuer: 'rfp-system',
+      audience: 'rfp-system-api',
     }
   );
 
@@ -53,9 +53,9 @@ export const verifyAccessToken = (token: string): TokenPayload => {
 export const generateRefreshToken = (payload: TokenPayload): string => {
   const token = jwt.sign(
     payload,
-    env.JWT_REFRESH_TOKEN_SECRET, // Different secret!
+    env.JWT_REFRESH_TOKEN_SECRET,
     {
-      expiresIn: env.JWT_REFRESH_TOKEN_EXPIRATION, // Longer expiry
+      expiresIn: env.JWT_REFRESH_TOKEN_EXPIRATION as never,
       issuer: 'rfp-system',
       audience: 'rfp-system-api',
     }

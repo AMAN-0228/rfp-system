@@ -5,59 +5,32 @@ let redis: Redis | null = null;
 
 export const getRedisClient = (): Redis => {
   if (!redis) {
-    // Support both connection string (cloud) and individual config (local)
-    const redisConfig = process.env.REDIS_URL
-      ? {
-          // Cloud Redis: Use connection string
-          // Format: redis://:password@host:port or rediss://:password@host:port (SSL)
+    redis = env.REDIS_URL
+      ? new Redis(env.REDIS_URL, {
           connectionName: 'rfp-system-api',
-          retryStrategy: (times: number) => {
-            const delay = Math.min(times * 50, 2000);
-            return delay;
-          },
+          retryStrategy: (times) => Math.min(times * 50, 2000),
           maxRetriesPerRequest: 3,
           enableReadyCheck: true,
           lazyConnect: false,
-          // Cloud Redis often uses TLS
-          ...(process.env.REDIS_URL.startsWith('rediss://') && {
-            tls: {},
-          }),
-        }
-      : {
-          // Local Redis: Use individual config
+          ...(env.REDIS_URL.startsWith('rediss://') && { tls: {} }),
+        })
+      : new Redis({
           host: env.REDIS_HOST,
           port: env.REDIS_PORT,
           password: env.REDIS_PASSWORD || undefined,
           db: env.REDIS_DB,
-          retryStrategy: (times: number) => {
-            const delay = Math.min(times * 50, 2000);
-            return delay;
-          },
+          retryStrategy: (times) => Math.min(times * 50, 2000),
           maxRetriesPerRequest: 3,
           enableReadyCheck: true,
           lazyConnect: false,
-        };
-
-    redis = process.env.REDIS_URL
-      ? new Redis(process.env.REDIS_URL, redisConfig)
-      : new Redis(redisConfig);
+        });
 
     redis.on('connect', () => {
-      const source = process.env.REDIS_URL ? 'cloud' : 'local';
-      console.log(`✅ Redis connected successfully (${source})`);
+      console.log(`✅ Redis connected successfully (${env.REDIS_URL ? 'cloud' : 'local'})`);
     });
-
-    redis.on('error', (err) => {
-      console.error('❌ Redis connection error:', err);
-    });
-
-    redis.on('close', () => {
-      console.log('⚠️ Redis connection closed');
-    });
-
-    redis.on('reconnecting', () => {
-      console.log('🔄 Redis reconnecting...');
-    });
+    redis.on('error', (err) => console.error('❌ Redis connection error:', err));
+    redis.on('close', () => console.log('⚠️ Redis connection closed'));
+    redis.on('reconnecting', () => console.log('🔄 Redis reconnecting...'));
   }
 
   return redis;
@@ -73,3 +46,26 @@ export const closeRedisConnection = async (): Promise<void> => {
 
 // Export singleton instance
 export const redisClient = getRedisClient();
+
+// BullMQ requires maxRetriesPerRequest: null for blocking commands
+let bullmqRedis: Redis | null = null;
+export const getBullmqRedisClient = (): Redis => {
+  if (bullmqRedis) return bullmqRedis;
+
+  bullmqRedis = env.REDIS_URL
+    ? new Redis(env.REDIS_URL, {
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+        ...(env.REDIS_URL.startsWith('rediss://') && { tls: {} }),
+      })
+    : new Redis({
+        host: env.REDIS_HOST,
+        port: env.REDIS_PORT,
+        password: env.REDIS_PASSWORD || undefined,
+        db: env.REDIS_DB,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+      });
+
+  return bullmqRedis;
+};

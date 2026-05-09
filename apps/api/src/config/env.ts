@@ -42,12 +42,12 @@ export const env = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || undefined,
   REDIS_DB: parseInt(process.env.REDIS_DB || '0', 10),
 
+  // Queue
+  EMAIL_OUTBOUND_QUEUE: process.env.EMAIL_OUTBOUND_QUEUE || 'email-outbound',
+  EMAIL_INBOUND_QUEUE: process.env.EMAIL_INBOUND_QUEUE || 'email-inbound',
 
-  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
-  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-  RESEND_FROM_NAME: process.env.RESEND_FROM_NAME || 'RFP System',
-  EMAIL_ENABLED: process.env.EMAIL_ENABLED !== 'false',
-  RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET || undefined,
+  // Feature flag
+  EMAIL_ENABLED: process.env.EMAIL_ENABLED === 'true',
 
 } as const;
 
