@@ -1,17 +1,20 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore, waitForHydration } from '@/stores/auth';
 
 export const Route = createFileRoute('/')({
-  beforeLoad: () => {
-    const { hydrated, isAuthenticated } = useAuthStore.getState();
-    // Wait for hydration before deciding — let the boot resolve and re-run.
-    if (!hydrated) return;
+  // Block until the boot refresh has resolved — only then can we know which
+  // way to redirect. Without this, the index would render IndexComponent
+  // and never re-evaluate when hydration completes.
+  beforeLoad: async () => {
+    await waitForHydration();
+    const { isAuthenticated } = useAuthStore.getState();
     if (isAuthenticated) {
       throw redirect({ to: '/dashboard' });
     }
     throw redirect({ to: '/login', search: { redirect: undefined } });
   },
+  pendingComponent: IndexComponent,
   component: IndexComponent,
 });
 

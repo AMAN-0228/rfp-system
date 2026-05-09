@@ -22,12 +22,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
-// Bootstrap auth on first mount: attempt a single refresh, then mark hydrated
-// regardless of outcome so route guards can run. FE-15 will replace this with a
-// /me call that also calls setSession when the session is valid.
-void runRefresh().finally(() => {
-  useAuthStore.getState().markHydrated();
-});
+// Bootstrap auth on first mount: attempt a single refresh, mark
+// isAuthenticated if the cookie is valid, then mark hydrated regardless so
+// route guards (which await hydration) can resolve. FE-15 will replace this
+// with a /me fetch that also populates userId/email via setSession.
+void runRefresh()
+  .then((ok) => {
+    if (ok) useAuthStore.getState().markAuthenticated();
+  })
+  .finally(() => {
+    useAuthStore.getState().markHydrated();
+  });
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {

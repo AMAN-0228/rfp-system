@@ -46,7 +46,10 @@ export const api: KyInstance = ky.create({
       async (error: HTTPError) => {
         let body: ErrorBody = {};
         try {
-          body = (await error.response.json()) as ErrorBody;
+          // Clone before reading: in some ky/fetch paths the original body
+          // may already be consumed by the time this hook runs, and reading
+          // a consumed stream throws.
+          body = (await error.response.clone().json()) as ErrorBody;
         } catch {
           // Response had no JSON body — keep the empty object.
         }
@@ -67,10 +70,21 @@ export const api: KyInstance = ky.create({
  * Envelope helper. Every backend success response is `{ success: true, data: T }`.
  * Feature code calls `unwrap(api.get(...).json<...>())` so it never reaches
  * for `.data` manually.
+ *
+ * Includes a runtime guard: if the backend ever returns 2xx with
+ * `success: false` (a contract violation, not a network error), we surface
+ * it loudly instead of silently returning `undefined`.
  */
 export async function unwrap<T>(
   p: Promise<{ success: true; data: T }>,
 ): Promise<T> {
   const r = await p;
+  if (
+    r === null ||
+    typeof r !== 'object' ||
+    (r as { success?: unknown }).success !== true
+  ) {
+    throw new ApiError(200, 'Unexpected response shape', r);
+  }
   return r.data;
 }

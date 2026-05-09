@@ -17,6 +17,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   hydrated: boolean;
   setSession: (session: { userId: number; email: string }) => void;
+  markAuthenticated: () => void;
   clear: () => void;
   markHydrated: () => void;
 }
@@ -28,6 +29,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
   hydrated: false,
   setSession: ({ userId, email }) =>
     set({ userId, email, isAuthenticated: true }),
+  // Set isAuthenticated without populating userId/email — used by the boot
+  // refresh, which only proves the cookie is valid. FE-15 will fetch the
+  // profile separately and call setSession with the full identity.
+  markAuthenticated: () => set({ isAuthenticated: true }),
+  // `hydrated` is intentionally NOT reset — logged-out users still need
+  // route guards to run, and the app only hydrates once per page load.
   clear: () => set({ userId: null, email: null, isAuthenticated: false }),
   markHydrated: () => set({ hydrated: true }),
 }));
@@ -37,3 +44,21 @@ export const useAuthStore = create<AuthState>()((set) => ({
  * hook, which can't call hooks). Reads the current snapshot.
  */
 export const getAuthState = (): AuthState => useAuthStore.getState();
+
+/**
+ * Resolves once `hydrated` flips to true. Used by route loaders/guards to
+ * block navigation while the boot refresh is in flight — without this,
+ * `_authed` routes could render protected content during the ~200-500ms
+ * window before the refresh resolves.
+ */
+export function waitForHydration(): Promise<void> {
+  if (useAuthStore.getState().hydrated) return Promise.resolve();
+  return new Promise((resolve) => {
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state.hydrated) {
+        unsubscribe();
+        resolve();
+      }
+    });
+  });
+}

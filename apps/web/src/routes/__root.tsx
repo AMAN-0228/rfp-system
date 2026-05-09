@@ -1,4 +1,23 @@
+import { lazy, Suspense } from 'react';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
+
+// Devtools are dev-only — Vite tree-shakes the lazy import out of the
+// production bundle because the conditional is statically false at build.
+const ReactQueryDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import('@tanstack/react-query-devtools').then((m) => ({
+        default: m.ReactQueryDevtools,
+      })),
+    )
+  : null;
+
+const TanStackRouterDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import('@tanstack/router-devtools').then((m) => ({
+        default: m.TanStackRouterDevtools,
+      })),
+    )
+  : null;
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -7,7 +26,17 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      {ReactQueryDevtools && TanStackRouterDevtools && (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools buttonPosition="bottom-right" />
+          <TanStackRouterDevtools position="bottom-left" />
+        </Suspense>
+      )}
+    </>
+  );
 }
 
 function NotFoundComponent() {
