@@ -57,11 +57,14 @@ function RegisterPage() {
     mutationFn: registerUser,
     onSuccess: (_data, vars) => {
       setSubmitError(null);
-      // Carry { name, email, password } through router state (in-memory,
-      // never URL). The verify route reads this back via useRouterState.
-      // The `authReg` key is module-augmented onto TanStack's
-      // `HistoryState` from `./verify` — re-validated with zod at read
-      // time so direct visits with a stale shape bounce back to /register.
+      // Carry { name, email, password } through router history state so
+      // the password never appears in the URL, address bar, or Referer
+      // header. Note: browsers do persist history.state on disk for
+      // back/forward navigation, so this is not a long-term store; the
+      // verify route re-validates the blob with zod and bounces to
+      // /register if it's missing or stale. The `authReg` key is
+      // module-augmented onto TanStack's `HistoryState` in
+      // `src/types/history.d.ts`.
       void nav({
         to: '/register/verify',
         state: (prev) => ({ ...prev, authReg: vars }),

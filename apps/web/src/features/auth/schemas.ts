@@ -19,11 +19,11 @@ import { z } from 'zod';
 
 export const passwordRule = z
   .string()
-  .min(8, 'At least 8 characters')
-  .regex(/[A-Z]/, 'one uppercase')
-  .regex(/[a-z]/, 'one lowercase')
-  .regex(/\d/, 'one digit')
-  .regex(/[^A-Za-z0-9]/, 'one symbol');
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/\d/, 'Password must contain at least one digit')
+  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one symbol');
 
 export const nameRule = z
   .string()
@@ -47,16 +47,13 @@ export const verifyOtpSchema = z.object({
 });
 
 /**
- * Validates the history-state blob that the verify route reads. If parsing
- * fails the verify route should redirect to `/register` — the user
- * presumably hit the URL directly with no carry-over.
+ * Validates the history-state blob that the verify route reads. The shape is
+ * identical to `registerSchema` — verify just re-checks the carry-over at
+ * read time. If parsing fails the verify route should redirect to
+ * `/register` — the user presumably hit the URL directly with no carry-over.
  */
-export const registerCarryOverSchema = z.object({
-  name: nameRule,
-  email: emailRule,
-  password: passwordRule,
-});
+export const registerCarryOverSchema = registerSchema;
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
-export type RegisterCarryOver = z.infer<typeof registerCarryOverSchema>;
+export type RegisterCarryOver = RegisterInput;

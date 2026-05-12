@@ -2,7 +2,10 @@
  * `/register/verify` — step 2 of the two-step registration flow.
  *
  * Reads { name, email, password } from router history state (set by
- * `/register`). If the carry-over is missing or fails the
+ * `/register`). Note: browsers persist `history.state` to disk for
+ * back/forward navigation, so this is not a strictly in-memory channel — but
+ * it stays out of the URL and Referer header, which is what matters for the
+ * password. If the carry-over is missing or fails the
  * `registerCarryOverSchema` parse, we redirect back to `/register` from
  * `beforeLoad` — there's nothing meaningful this page can do without those
  * fields, since the verify endpoint validates the full set in one shot.
@@ -12,8 +15,8 @@
  * client-side countdown (matches the server-side OTP TTL — see
  * /docs/FLOWS/authentication-flow.md).
  *
- * Rate-limit handling: when the API surfaces a 429 (or a message containing
- * "too many"), we render a non-clearing banner and disable resend.
+ * Rate-limit handling: when the API surfaces a 429, we render a non-clearing
+ * banner and disable resend.
  */
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
@@ -40,18 +43,10 @@ import {
 } from '@/features/auth/schemas';
 import { isApiError } from '@/lib/errors';
 
-/**
- * History state shape we put through `navigate({ state })` from `/register`.
- * We declare it module-augmented onto TanStack's `HistoryState` so the
- * `state` option on `navigate` accepts it without `as never`-style casts
- * elsewhere — but we still re-validate at read time with zod, because
- * direct visits / back-forward / older tabs can land here with anything.
- */
-declare module '@tanstack/history' {
-  interface HistoryState {
-    authReg?: RegisterCarryOver;
-  }
-}
+// The `authReg` key on TanStack's `HistoryState` is module-augmented in
+// `src/types/history.d.ts`. At read time we re-validate the blob with zod
+// because direct visits / back-forward / older tabs can land here with
+// anything.
 
 function readCarryOver(state: unknown): RegisterCarryOver | null {
   if (!state || typeof state !== 'object') return null;
@@ -99,9 +94,7 @@ function VerifyPage() {
     onError: (err: Error) => {
       const message = err.message || 'Verification failed';
       const status = isApiError(err) ? err.status : undefined;
-      const isRateLimit =
-        status === 429 || /too many/i.test(message);
-      if (isRateLimit) {
+      if (status === 429) {
         setRateLimitMessage(message);
       }
       setSubmitError(message);
@@ -119,9 +112,7 @@ function VerifyPage() {
     onError: (err: Error) => {
       const message = err.message || 'Could not resend code';
       const status = isApiError(err) ? err.status : undefined;
-      const isRateLimit =
-        status === 429 || /too many/i.test(message);
-      if (isRateLimit) {
+      if (status === 429) {
         setRateLimitMessage(message);
       }
       toast.error(message);
