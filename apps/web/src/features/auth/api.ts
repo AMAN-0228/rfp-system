@@ -21,10 +21,14 @@ import {
   type RegisterCarryOver,
   type RegisterInput,
   type VerifyOtpInput,
+  type LoginInput,
 } from '@/features/auth/schemas';
 
 const registerPath = endpoints.auth.register.replace(/^\//, '');
 const verifyOtpPath = endpoints.auth.verifyOtpRegister.replace(/^\//, '');
+const loginPath = endpoints.auth.login.replace(/^\//, '');
+const logoutPath = endpoints.auth.logout.replace(/^\//, '');
+const refreshPath = endpoints.auth.refresh.replace(/^\//, '');
 
 export async function registerUser(input: RegisterInput): Promise<void> {
   await unwrap(
@@ -42,4 +46,31 @@ export async function verifyOtpForRegistration(
       .post(verifyOtpPath, { json: input })
       .json<{ success: true; data: unknown }>(),
   );
+}
+
+export async function login(input: LoginInput): Promise<{ userId: number; email: string }> {
+  return unwrap(
+    api
+      .post(loginPath, { json: input })
+      .json<{ success: true; data: { userId: number; email: string } }>(),
+  );
+}
+
+export async function logout(): Promise<void> {
+  await unwrap(
+    api
+      .post(logoutPath)
+      .json<{ success: true; data: unknown }>(),
+  );
+}
+
+export async function bootstrapAuth(): Promise<{ userId: number; email: string } | null> {
+  try {
+    const result = await api
+      .post(refreshPath)
+      .json<{ success: true; data: { userId: number; email: string } }>();
+    return unwrap(Promise.resolve(result));
+  } catch {
+    return null;
+  }
 }

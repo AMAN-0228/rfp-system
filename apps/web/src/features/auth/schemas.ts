@@ -54,6 +54,12 @@ export const verifyOtpSchema = z.object({
  */
 export const registerCarryOverSchema = registerSchema;
 
+export const loginSchema = z.object({
+  email: emailRule,
+  password: z.string().min(1, 'Password is required'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type RegisterCarryOver = RegisterInput;
+export type LoginInput = z.infer<typeof loginSchema>;
