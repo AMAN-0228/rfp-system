@@ -40,3 +40,41 @@ export function verifyOtpSuccessHandler(baseUrl: string): HttpHandler {
     async () => HttpResponse.json({ success: true, message: 'Registered' }),
   );
 }
+
+/**
+ * Happy-path handler for `POST /api/no-auth/user/login`.
+ * Returns user data within the `{ success, data }` envelope.
+ */
+export function loginSuccessHandler(
+  baseUrl: string,
+  userId: number = 1,
+  email: string = 'test@example.com',
+): HttpHandler {
+  return http.post(`${baseUrl}/api/no-auth/user/login`, async () =>
+    HttpResponse.json({ success: true, data: { userId, email } }),
+  );
+}
+
+/**
+ * Happy-path handler for `POST /api/auth/logout`.
+ * Returns the standard `{ success, message }` envelope.
+ */
+export function logoutSuccessHandler(baseUrl: string): HttpHandler {
+  return http.post(`${baseUrl}/api/auth/logout`, async () =>
+    HttpResponse.json({ success: true, message: 'Logged out' }),
+  );
+}
+
+/**
+ * Happy-path handler for `POST /api/auth/refresh`.
+ * Returns user data within the `{ success, data }` envelope.
+ */
+export function refreshSuccessHandler(
+  baseUrl: string,
+  userId: number = 1,
+  email: string = 'test@example.com',
+): HttpHandler {
+  return http.post(`${baseUrl}/api/auth/refresh`, async () =>
+    HttpResponse.json({ success: true, data: { userId, email } }),
+  );
+}
