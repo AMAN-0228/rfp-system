@@ -7,6 +7,9 @@ import * as templateService from "./templateService";
 import * as rfpLineItemService from "./rfpLineItemService";
 import * as rfpRepository from "../repositories/rfpRepository";
 import { runInTransaction } from "../repositories/transactionRunner";
+import { enqueueOutbound } from "./emailQueueService";
+import { generateReplyToken } from "../utils/replyToken";
+import prisma from "../config/database";
 
 const generateRfpCode = async (values: any, auth: TokenPayload) => {
     if (values.method === METHODS.SAVE) {
@@ -172,6 +175,39 @@ export const getAllRfpForListing = async(options: any, auth: TokenPayload) => {
     }
 };
 
+const dispatchInvitations = async (rfpId: number) => {
+    const rfp = await prisma.rFP.findUniqueOrThrow({
+        where: { id: rfpId },
+        include: {
+            user: true,
+            suppliers: { include: { supplier: true } },
+        },
+    });
+
+    for (const link of rfp.suppliers) {
+        const token = link.replyToken ?? generateReplyToken();
+        if (!link.replyToken) {
+            await prisma.rFPSupplier.update({
+                where: { id: link.id },
+                data: { replyToken: token },
+            });
+        }
+
+        await enqueueOutbound({
+            type: 'send_rfp_invitation',
+            idempotencyKey: `rfp:${rfp.id}:supplier:${link.supplierId}:invite`,
+            rfpId: rfp.id,
+            supplierId: link.supplierId,
+            rfpSupplierId: link.id,
+            to: link.supplier.email,
+            replyToken: token,
+            rfpCode: rfp.code,
+            rfpSubject: rfp.subject,
+            senderUserName: rfp.user.name ?? undefined,
+        });
+    }
+};
+
 export const createNew = async(payload: any, auth: TokenPayload) => {
     if (!payload.method || !payload.action) {
         throw new ValidationError('Method and action both are required');
@@ -183,8 +219,10 @@ export const createNew = async(payload: any, auth: TokenPayload) => {
         createObj.headerDetails.status = 'submitted';
     }
 
+    let rfpId: number;
     await runInTransaction(async (tx) => {
         const rfp = await rfpRepository.create({ ...createObj.headerDetails }, tx);
+        rfpId = rfp.id;
         await rfpLineItemService.lineItemsUpdate(
             rfp.id,
             { ...createObj.lineItems, action: payload.action },
@@ -192,6 +230,10 @@ export const createNew = async(payload: any, auth: TokenPayload) => {
             tx
         );
     });
+
+    if (payload.action === ACTIONS.CREATE && payload.method === METHODS.SUBMIT) {
+        await dispatchInvitations(rfpId!);
+    }
 }
 
 

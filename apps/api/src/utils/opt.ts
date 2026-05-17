@@ -1,6 +1,7 @@
 import { redisClient } from "../config/redis";
 import { ValidationError } from "./errors"
 import { redisService } from "../service/redisService";
+import { enqueueOutbound } from "../service/emailQueueService";
 
 export const sendOtp = async (email: string) => {
     if (!email) {
@@ -22,10 +23,17 @@ export const sendOtp = async (email: string) => {
         throw new ValidationError('OTP already exists for this email. Please wait for 1 min for trying again.');
     }
 
-    const otp = Math.floor(1000 + Math.random() * 9000);
-    // TODO: Enqueue the OTP to the outbound queue
+    const otp = String(Math.floor(1000 + Math.random() * 9000));
+    const minuteBucket = Math.floor(Date.now() / 60_000);
 
-    await redisService.set(otpKey, otp.toString(), 60);
+    await enqueueOutbound({
+      type: 'send_otp',
+      idempotencyKey: `otp:${email}:${minuteBucket}`,
+      to: email,
+      otp,
+    });
+
+    await redisService.set(otpKey, otp, 60);
     await redisService.set(`otp:${email}_attempts`, (numberOfAttempts + 1).toString(), 5 * 60);
     return otp;
 };
