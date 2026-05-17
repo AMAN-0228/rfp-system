@@ -3,6 +3,10 @@ import { logger } from "./config/logger";
 import { env } from "./config/env";
 import { createOutboundWorker } from "./workers/outboundWorker";
 import { createInboundWorker } from "./workers/inboundWorker";
+import './handlers/testSend';
+import './handlers/sendRfpInvitation';
+import './handlers/sendOtp';
+import './handlers/sendResponseConfirmed';
 
 const outboundWorker = createOutboundWorker();
 const inboundWorker = createInboundWorker();
