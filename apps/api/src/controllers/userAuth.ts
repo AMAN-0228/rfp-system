@@ -4,6 +4,7 @@ import { login } from '../utils/auth';
 import { ValidationError } from '../utils/errors';
 import { refreshTokens } from '../utils/tokens';
 import { forgotPassword, forgotPasswordVerify, resetPassword } from '../utils/password';
+import { env } from '../config/env';
 
 export const registerUser = async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
@@ -35,6 +36,11 @@ export const loginUser = async (req: Request, res: Response) => {
 };
 
 export const refreshToken = async (req: Request, res: Response) => {
+    if (env.NODE_ENV === 'development') {
+        res.status(200).json({ success: true, message: 'Refresh bypassed (dev)' });
+        return;
+    }
+
     const refreshToken = req.body.refreshToken || req.cookies?.refreshToken;
     
     if (!refreshToken) {
